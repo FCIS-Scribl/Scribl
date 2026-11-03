@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Scribl</string>
+    <string name="no_notes_found">No notes found</string>
 </resources>
