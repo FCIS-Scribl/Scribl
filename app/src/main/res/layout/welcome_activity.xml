@@ -1,72 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/constraintLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#5F82C1"
-    android:backgroundTint="#01DAFB"
-    android:fadeScrollbars="false"
-    android:orientation="vertical">
+    android:background="#01DAFB">
 
     <TextView
         android:id="@+id/tvLogo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_constraintEnd_toEndOf="parent"
-        android:layout_constraintStart_toStartOf="parent"
-        android:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="52dp"
         android:text="Scribl"
         android:textColor="#263B59"
         android:textSize="60sp"
         android:textStyle="bold"
-        tools:layout_editor_absoluteX="131dp"
-        tools:layout_editor_absoluteY="16dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/ivWelcome"
         android:layout_width="218dp"
         android:layout_height="197dp"
-        android:layout_constraintTop_toBottomOf="@id/tvLogo"
-        android:layout_constraintEnd_toEndOf="parent"
-        android:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="132dp"
+        android:background="@drawable/rounded_shape"
+        android:clipToOutline="true"
         android:contentDescription="Scribl welcome illustration"
         android:scaleType="fitCenter"
-        android:background="@drawable/rounded_shape"
         android:src="@drawable/app_icon"
-        tools:layout_editor_absoluteX="98dp"
-        tools:layout_editor_absoluteY="215dp"
-       />
-
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvLogo" />
 
     <TextView
         android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_constraintTop_toBottomOf="@id/ivWelcome"
-        android:layout_constraintEnd_toEndOf="parent"
-        android:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="32dp"
         android:text="Your thoughts, organized."
         android:textColor="#263B59"
         android:textSize="23sp"
         android:textStyle="bold"
-        tools:layout_editor_absoluteX="72dp"
-        tools:layout_editor_absoluteY="424dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ivWelcome" />
 
     <Button
         android:id="@+id/btnGetStarted"
         android:layout_width="0dp"
         android:layout_height="55dp"
-        android:layout_constraintBottom_toBottomOf="parent"
-        android:layout_constraintEnd_toEndOf="parent"
-        android:layout_constraintStart_toStartOf="parent"
         android:layout_marginHorizontal="30dp"
+        android:layout_marginBottom="72dp"
         android:backgroundTint="#092A66"
         android:text="Get Started"
-       android:textColor="@color/white"
-        tools:layout_editor_absoluteX="148dp"
-        tools:layout_editor_absoluteY="532dp"
-
-       />
+        android:textColor="@color/white"
+        android:background="@drawable/rounded_shape"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
