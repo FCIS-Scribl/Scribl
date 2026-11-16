@@ -3,7 +3,6 @@ package com.asu.fcis.scribl.ui.screens
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,21 +13,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Modifier
-import androidx.compose.runtime.collectAsState
+import com.asu.fcis.scribl.data.CategoryEntity
 import com.asu.fcis.scribl.data.ScriblDatabase
 import com.asu.fcis.scribl.ui.theme.*
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
     onAddNoteClick: () -> Unit = {},
     onCategoryClick: (Int) -> Unit = {},
-    onAllNotesClick: () -> Unit = {},
-    onAddCategoryClick: () -> Unit = {}
+    onAllNotesClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
+
     val database = remember {
         ScriblDatabase.getDatabase(context)
     }
+
+    val scope = rememberCoroutineScope()
 
     val categories by database.categoryDao()
         .getAllCategories()
@@ -39,6 +41,15 @@ fun HomeScreen(
         .collectAsState(initial = emptyList())
 
     val activeNotes = notes.filter { !it.is_archived }
+
+
+    var showAddCategoryDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var categoryName by remember {
+        mutableStateOf("")
+    }
 
     val categoryColors = listOf(
         DarkBlue, Purple, Coral, Teal
@@ -78,7 +89,9 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
-                .clickable { onAllNotesClick() },
+                .clickable {
+                    onAllNotesClick()
+                },
             shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Teal
@@ -154,7 +167,10 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(65.dp)
-                .clickable { onAddCategoryClick() },
+                .clickable {
+                    categoryName = ""
+                    showAddCategoryDialog = true
+                },
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = LightGray
@@ -164,7 +180,11 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("+", fontSize = 35.sp, color = DarkText)
+                Text(
+                    "+",
+                    fontSize = 35.sp,
+                    color = DarkText
+                )
             }
         }
 
@@ -186,6 +206,59 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(25.dp))
     }
+
+    // Add Category Dialog
+    if (showAddCategoryDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showAddCategoryDialog = false
+            },
+            title = {
+                Text("Add New Category")
+            },
+            text = {
+                OutlinedTextField(
+                    value = categoryName,
+                    onValueChange = {
+                        categoryName = it
+                    },
+                    label = {
+                        Text("Category Name")
+                    },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val name = categoryName.trim()
+
+                        if (name.isNotEmpty()) {
+                            scope.launch {
+                                database.categoryDao().insertCategory(
+                                    CategoryEntity(name = name)
+                                )
+
+                                showAddCategoryDialog = false
+                                categoryName = ""
+                            }
+                        }
+                    }
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showAddCategoryDialog = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -199,7 +272,9 @@ fun CategoryCard(
     Card(
         modifier = modifier
             .height(160.dp)
-            .clickable { onClick() },
+            .clickable {
+                onClick()
+            },
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
             containerColor = color
@@ -211,7 +286,12 @@ fun CategoryCard(
                 .padding(18.dp),
             verticalArrangement = Arrangement.Bottom
         ) {
-            Text(name, fontSize = 22.sp, color = Color.White)
+            Text(
+                name,
+                fontSize = 22.sp,
+                color = Color.White
+            )
+
             Text(
                 "Notes: $count",
                 fontSize = 16.sp,
@@ -220,5 +300,3 @@ fun CategoryCard(
         }
     }
 }
-
-

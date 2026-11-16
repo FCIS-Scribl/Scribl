@@ -1,6 +1,7 @@
 
 package com.asu.fcis.scribl
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -86,7 +87,37 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ScriblTheme {
-                HomeScreen()
+                HomeScreen(
+
+                    // Add Note
+                    onAddNoteClick = {
+                        val intent = Intent(
+                            this,
+                            NewNoteActivity::class.java
+                        )
+                        startActivity(intent)
+                    },
+
+                    // Category Click
+                    onCategoryClick = { categoryId ->
+                        val intent = Intent(
+                            this,
+                            CategoriesActivity::class.java
+                        )
+
+                        intent.putExtra("category_id", categoryId)
+                        startActivity(intent)
+                    },
+
+                    // All Notes
+                    onAllNotesClick = {
+                        val intent = Intent(
+                            this,
+                            AllNotesActivity::class.java
+                        )
+                        startActivity(intent)
+                    }
+                )
             }
         }
     }
