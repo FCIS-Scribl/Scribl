@@ -116,7 +116,18 @@ class MainActivity : ComponentActivity() {
                             AllNotesActivity::class.java
                         )
                         startActivity(intent)
+                    },
+                    // Archive
+                    onArchiveClick = {
+                        val intent = Intent(
+                            this,
+                            ArchiveActivity::class.java
+                        )
+                        startActivity(intent)
                     }
+
+
+
                 )
             }
         }
