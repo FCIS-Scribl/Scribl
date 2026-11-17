@@ -1,6 +1,7 @@
 
 package com.asu.fcis.scribl.ui.screens
 
+import android.content.Intent
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.*
@@ -13,9 +14,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.Modifier
+import com.asu.fcis.scribl.NoteDetailsActivity
 import com.asu.fcis.scribl.data.CategoryEntity
 import com.asu.fcis.scribl.data.ScriblDatabase
+import com.asu.fcis.scribl.ui.components.NoteCard
 import com.asu.fcis.scribl.ui.theme.*
+import com.asu.fcis.scribl.utils.togglePin
+import com.asu.fcis.scribl.utils.toggleArchive
 import kotlinx.coroutines.launch
 
 @Composable
@@ -44,6 +49,19 @@ fun HomeScreen(
     val activeNotes = notes.filter { !it.is_archived }
     val archivedNotes = notes.filter { it.is_archived }
 
+    // Search state
+    var searchQuery by remember {
+        mutableStateOf("")
+    }
+
+    // Filter notes by title or content
+    val searchResults = notes
+        .filter { note ->
+            note.title.contains(searchQuery.trim(), ignoreCase = true) ||
+                    note.content.contains(searchQuery.trim(), ignoreCase = true)
+        }
+        .sortedByDescending { it.is_pinned }
+
     var showAddCategoryDialog by remember {
         mutableStateOf(false)
     }
@@ -68,7 +86,7 @@ fun HomeScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 45.dp, bottom = 35.dp),
+                .padding(top = 45.dp, bottom = 25.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -85,162 +103,251 @@ fun HomeScreen(
             )
         }
 
-        // All Notes
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp)
-                .clickable {
-                    onAllNotesClick()
-                },
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = Teal
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(18.dp),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "All notes",
-                    fontSize = 22.sp,
-                    color = Color.White
-                )
-
-                Text(
-                    text = "Notes: ${activeNotes.size}",
-                    fontSize = 16.sp,
-                    color = Color.White
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Archived Notes
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(90.dp)
-                .clickable {
-                    onArchiveClick()
-                },
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = DarkBlue
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(18.dp),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "Archived Notes",
-                    fontSize = 20.sp,
-                    color = Color.White
-                )
-
-                Text(
-                    text = "Archived: ${archivedNotes.size}",
-                    fontSize = 15.sp,
-                    color = Color.White
-                )
-            }
-        }
-
-        // Categories
-        Text(
-            text = "Categories",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Medium,
-            color = DarkText,
-            modifier = Modifier.padding(
-                top = 32.dp,
-                bottom = 10.dp
-            )
+        // Search Bar
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = {
+                Text("Search your notes...")
+            },
+            singleLine = true,
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    TextButton(
+                        onClick = { searchQuery = "" }
+                    ) {
+                        Text("Clear")
+                    }
+                }
+            },
+            shape = RoundedCornerShape(14.dp)
         )
 
-        categories.chunked(2).forEachIndexed { rowIndex, rowCategories ->
+        Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                rowCategories.forEachIndexed { index, category ->
+        // Search Results
+        if (searchQuery.isNotBlank()) {
 
-                    val color = categoryColors[
-                        (rowIndex * 2 + index) % categoryColors.size
-                    ]
+            Text(
+                text = "Search Results",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
+                color = DarkText
+            )
 
-                    CategoryCard(
-                        name = category.name,
-                        count = activeNotes.count {
-                            it.category_id == category.id
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (searchResults.isEmpty()) {
+
+                Text(
+                    text = "No notes found.",
+                    color = Color.Gray,
+                    fontSize = 16.sp
+                )
+
+            } else {
+
+                Text(
+                    text = "Found: ${searchResults.size} notes",
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                searchResults.forEach { note ->
+
+                    NoteCard(
+                        note = note,
+
+                        onNoteClick = {
+                            val intent = Intent(
+                                context,
+                                NoteDetailsActivity::class.java
+                            )
+
+                            intent.putExtra("note_id", note.id)
+                            context.startActivity(intent)
                         },
-                        color = color,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            onCategoryClick(category.id)
+
+                        onPinClick = {
+                            scope.launch {
+                                togglePin(database, note)
+                            }
+                        },
+
+                        onArchiveClick = {
+                            scope.launch {
+                                toggleArchive(database, note)
+                            }
                         }
                     )
-                }
 
-                if (rowCategories.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-        }
+        } else {
 
-        // Add Category
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(65.dp)
-                .clickable {
-                    categoryName = ""
-                    showAddCategoryDialog = true
-                },
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = LightGray
-            )
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "+",
-                    fontSize = 35.sp,
-                    color = DarkText
+            // All Notes
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clickable {
+                        onAllNotesClick()
+                    },
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Teal
                 )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "All notes",
+                        fontSize = 22.sp,
+                        color = Color.White
+                    )
+
+                    Text(
+                        text = "Notes: ${activeNotes.size}",
+                        fontSize = 16.sp,
+                        color = Color.White
+                    )
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        // Add Note
-        Button(
-            onClick = onAddNoteClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(55.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Teal
+            // Archived Notes
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(90.dp)
+                    .clickable {
+                        onArchiveClick()
+                    },
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = DarkBlue
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Archived Notes",
+                        fontSize = 20.sp,
+                        color = Color.White
+                    )
+
+                    Text(
+                        text = "Archived: ${archivedNotes.size}",
+                        fontSize = 15.sp,
+                        color = Color.White
+                    )
+                }
+            }
+
+            // Categories
+            Text(
+                text = "Categories",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
+                color = DarkText,
+                modifier = Modifier.padding(
+                    top = 32.dp,
+                    bottom = 10.dp
+                )
             )
-        ) {
-            Text("ADD NOTE", color = Color.White)
-        }
 
-        Spacer(modifier = Modifier.height(25.dp))
+            categories.chunked(2).forEachIndexed { rowIndex, rowCategories ->
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+
+                    rowCategories.forEachIndexed { index, category ->
+
+                        val color = categoryColors[
+                            (rowIndex * 2 + index) % categoryColors.size
+                        ]
+
+                        CategoryCard(
+                            name = category.name,
+                            count = activeNotes.count {
+                                it.category_id == category.id
+                            },
+                            color = color,
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                onCategoryClick(category.id)
+                            }
+                        )
+                    }
+
+                    if (rowCategories.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Add Category
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(65.dp)
+                    .clickable {
+                        categoryName = ""
+                        showAddCategoryDialog = true
+                    },
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = LightGray
+                )
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "+",
+                        fontSize = 35.sp,
+                        color = DarkText
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Add Note
+            Button(
+                onClick = onAddNoteClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Teal
+                )
+            ) {
+                Text("ADD NOTE", color = Color.White)
+            }
+
+            Spacer(modifier = Modifier.height(25.dp))
+        }
     }
 
     // Add Category Dialog
