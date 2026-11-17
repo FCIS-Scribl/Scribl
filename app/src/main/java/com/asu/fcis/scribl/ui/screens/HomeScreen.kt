@@ -22,7 +22,8 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     onAddNoteClick: () -> Unit = {},
     onCategoryClick: (Int) -> Unit = {},
-    onAllNotesClick: () -> Unit = {}
+    onAllNotesClick: () -> Unit = {},
+    onArchiveClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -41,7 +42,7 @@ fun HomeScreen(
         .collectAsState(initial = emptyList())
 
     val activeNotes = notes.filter { !it.is_archived }
-
+    val archivedNotes = notes.filter { it.is_archived }
 
     var showAddCategoryDialog by remember {
         mutableStateOf(false)
@@ -112,6 +113,41 @@ fun HomeScreen(
                 Text(
                     text = "Notes: ${activeNotes.size}",
                     fontSize = 16.sp,
+                    color = Color.White
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Archived Notes
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(90.dp)
+                .clickable {
+                    onArchiveClick()
+                },
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = DarkBlue
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(18.dp),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Archived Notes",
+                    fontSize = 20.sp,
+                    color = Color.White
+                )
+
+                Text(
+                    text = "Archived: ${archivedNotes.size}",
+                    fontSize = 15.sp,
                     color = Color.White
                 )
             }
