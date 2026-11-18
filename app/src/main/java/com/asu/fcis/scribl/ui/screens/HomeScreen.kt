@@ -1,6 +1,6 @@
 
 package com.asu.fcis.scribl.ui.screens
-
+import kotlinx.coroutines.flow.flowOf
 import android.content.Intent
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
@@ -55,12 +55,13 @@ fun HomeScreen(
     }
 
     // Filter notes by title or content
-    val searchResults = notes
-        .filter { note ->
-            note.title.contains(searchQuery.trim(), ignoreCase = true) ||
-                    note.content.contains(searchQuery.trim(), ignoreCase = true)
+    val searchResults by remember(searchQuery) {
+        if (searchQuery.isBlank()) {
+            flowOf(emptyList())
+        } else {
+            database.noteDao().searchNotes(searchQuery.trim())
         }
-        .sortedByDescending { it.is_pinned }
+    }.collectAsState(initial = emptyList())
 
     var showAddCategoryDialog by remember {
         mutableStateOf(false)

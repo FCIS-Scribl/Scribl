@@ -28,7 +28,7 @@
         <activity android:name=".NewNoteActivity" android:exported="false" />
         <activity android:name=".NoteDetailsActivity" android:exported="false" />
         <activity android:name=".EditNoteActivity" android:exported="false" />
-        <activity android:name=".SearchActivity" android:exported="false" />
+      <!--  <activity android:name=".SearchActivity" android:exported="false" />-->
         <activity android:name=".CategoriesActivity" android:exported="false" />
         <activity android:name=".ArchiveActivity" android:exported="false" />
         <activity android:name=".AllNotesActivity" android:exported="false" />

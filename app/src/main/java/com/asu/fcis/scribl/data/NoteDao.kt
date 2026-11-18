@@ -18,7 +18,13 @@ interface NoteDao {
 
     @Query("SELECT * FROM notes WHERE category_id = :categoryId")
     fun getNotesByCategory(categoryId: Int): Flow<List<NoteEntity>>
-
+    @Query("""
+    SELECT * FROM notes
+    WHERE title LIKE '%' || :searchQuery || '%'
+       OR content LIKE '%' || :searchQuery || '%'
+    ORDER BY is_pinned DESC, updated_at DESC
+""")
+    fun searchNotes(searchQuery: String): Flow<List<NoteEntity>>
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNote(note: NoteEntity): Long
 
