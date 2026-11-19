@@ -33,4 +33,7 @@ interface NoteDao {
 
     @Delete
     suspend fun deleteNote(note: NoteEntity)
+
+    @Query("DELETE FROM notes WHERE category_id = :categoryId")
+    suspend fun deleteNotesByCategory(categoryId: Int)
 }
