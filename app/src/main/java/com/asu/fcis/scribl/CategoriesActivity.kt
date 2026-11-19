@@ -18,6 +18,8 @@ import com.asu.fcis.scribl.ui.theme.ScriblTheme
 import com.asu.fcis.scribl.utils.toggleArchive
 import com.asu.fcis.scribl.utils.togglePin
 import kotlinx.coroutines.launch
+import androidx.compose.ui.graphics.Color
+import androidx.room.withTransaction
 
 class CategoriesActivity : ComponentActivity() {
 
@@ -39,6 +41,9 @@ class CategoriesActivity : ComponentActivity() {
                     .collectAsState(initial = emptyList())
 
                 val scope = rememberCoroutineScope()
+                var showDeleteDialog by remember {
+                    mutableStateOf(false)
+                }
 
                 val category = categories.find {
                     it.id == categoryId
@@ -108,6 +113,85 @@ class CategoriesActivity : ComponentActivity() {
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Button(
+                        onClick = {
+                            showDeleteDialog = true
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFD32F2F)
+                        )
+                    ) {
+                        Text(
+                            text = "Delete Category",
+                            color = Color.White
+                        )
+                    }
+                }
+                if (showDeleteDialog) {
+
+                    AlertDialog(
+                        onDismissRequest = {
+                            showDeleteDialog = false
+                        },
+
+                        title = {
+                            Text("Delete Category?")
+                        },
+
+                        text = {
+                            Text(
+                                "Are you sure you want to delete \"${category?.name}\"?\n\n" +
+                                        "All notes inside this category will also be permanently deleted."
+                            )
+                        },
+
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+
+                                    scope.launch {
+
+                                        if (category != null) {
+
+                                            database.withTransaction {
+
+                                                // Delete all notes in this category
+                                                database.noteDao()
+                                                    .deleteNotesByCategory(categoryId)
+
+                                                // Delete the category
+                                                database.categoryDao()
+                                                    .deleteCategory(category)
+                                            }
+                                        }
+
+                                        showDeleteDialog = false
+                                        finish()
+                                    }
+                                }
+                            ) {
+                                Text(
+                                    "Delete",
+                                    color = Color(0xFFD32F2F)
+                                )
+                            }
+                        },
+
+                        dismissButton = {
+                            TextButton(
+                                onClick = {
+                                    showDeleteDialog = false
+                                }
+                            ) {
+                                Text("Cancel")
+                            }
+                        }
+                    )
                 }
             }
         }
